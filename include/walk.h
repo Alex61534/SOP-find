@@ -4,4 +4,3 @@
 void walk(const char *path, const char *name_filter);
 
 #endif
-

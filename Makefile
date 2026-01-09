@@ -6,4 +6,3 @@ myfind: src/main.c src/walk.c
 
 clean:
 	rm -f myfind
-

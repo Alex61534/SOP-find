@@ -6,7 +6,6 @@
 #include <errno.h>
 #include "walk.h"
 
-
 void walk(const char *path, const char *name_filter) {
     DIR *dir = opendir(path);
     if (dir == NULL) {

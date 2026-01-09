@@ -18,4 +18,3 @@ int main(int argc, char *argv[]) {
     walk(path, name_filter);
     return 0;
 }
-
