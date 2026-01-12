@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "filters.h"
 #include "walk.h"
 
 int main(int argc, char *argv[]) {
@@ -9,12 +10,12 @@ int main(int argc, char *argv[]) {
     }
 
     const char *path = argv[1];
-    const char *name_filter = NULL;
+    struct FilterOptions filters = {0};
 
     if (argc >= 4 && strcmp(argv[2], "-name") == 0) {
-        name_filter = argv[3];
+        filters.name = argv[3];
     }
 
-    walk(path, name_filter);
+    walk(path, &filters);
     return 0;
 }

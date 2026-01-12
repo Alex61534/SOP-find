@@ -4,9 +4,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include "filters.h"
 #include "walk.h"
 
-void walk(const char *path, const char *name_filter) {
+void walk(const char *path, const struct FilterOptions *filters) {
     DIR *dir = opendir(path);
     if (dir == NULL) {
         perror(path);
@@ -34,13 +35,13 @@ void walk(const char *path, const char *name_filter) {
         }
 
         // Pfad ausgeben, optional mit Name-Filter
-        if (name_filter == NULL || strcmp(entry->d_name, name_filter) == 0) {
+        if (filter_match_name(entry->d_name, filters)) {
             printf("%s\n", fullpath);
         }
 
         // Wenn Verzeichnis → rekursiv weiterlaufen
         if (S_ISDIR(st.st_mode)) {
-            walk(fullpath, name_filter);
+            walk(fullpath, filters);
         }
     }
 
