@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200112L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +35,7 @@ void walk(const char *path, const struct FilterOptions *filters) {
             continue;
         }
 
-        // Pfad ausgeben, optional mit Name-Filter
+        // Pfad ausgeben, optional mit Name-Filter oder suffix
         if (filter_match_name(entry->d_name, filters)) {
             printf("%s\n", fullpath);
         }
