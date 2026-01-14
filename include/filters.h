@@ -6,6 +6,7 @@
 struct FilterOptions {
     const char *name;
     const char *suffix;
+    int max_depth;
 };
 
 bool filter_match_name(const char *entry_name, const struct FilterOptions *filters);
