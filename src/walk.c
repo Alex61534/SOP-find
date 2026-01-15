@@ -35,8 +35,8 @@ void walk(const char *path, const struct FilterOptions *filters) {
             continue;
         }
 
-        // Pfad ausgeben, optional mit Name-Filter oder suffix
-        if (filter_match_name(entry->d_name, filters)) {
+        // Pfad ausgeben, optional mit Name-Filter oder suffix, min mx size
+        if (filter_match_name(entry->d_name, filters, &st)) {
             printf("%s\n", fullpath);
         }
 

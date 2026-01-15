@@ -1,6 +1,7 @@
 #include <string.h>
 #include <strings.h>
 #include "filters.h"
+#include <sys/types.h>
 
 bool match_suffix(const char *entry_name, const char *suffix){
     if(suffix == NULL){
@@ -15,7 +16,9 @@ bool match_suffix(const char *entry_name, const char *suffix){
     return strcasecmp(dot + 1, suffix) == 0;
 }
 
-bool filter_match_name(const char *entry_name, const struct FilterOptions *filters) {
+bool filter_match_name(const char *entry_name,
+                    const struct FilterOptions *filters,
+                    const struct stat *st) {
     if (filters == NULL){
         return true;
     }
@@ -25,6 +28,14 @@ bool filter_match_name(const char *entry_name, const struct FilterOptions *filte
     }
 
     if (!match_suffix(entry_name, filters->suffix)){
+        return false;
+    }
+
+    if(st->st_size < filters->size_min){
+        return false;
+    }
+
+    if(st->st_size > filters->size_max){
         return false;
     }
 
