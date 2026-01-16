@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200112L
 #ifndef FILTERS_H
 #define FILTERS_H
 
@@ -9,6 +8,7 @@
 struct FilterOptions {
     const char *name;
     const char *suffix;
+    char type;
 
     off_t size_min;             //off_t unterstützt große dateien und ist stat() kompatibel
     off_t size_max;

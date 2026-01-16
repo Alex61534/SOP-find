@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200112L
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -60,6 +59,13 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
             filters.size_max = kb * 1024;
+        }
+        else if (strcmp(argv[i], "-type") == 0) {
+            if (i+ 1 >= argc) {
+                fprintf(stderr, "Sie brauchen ein Argument für die type Option");
+                return 1;
+            }
+            filters.type = argv[i + 1][0];
         }
         else{
                             fprintf(stderr, "Unbekannte Filteroption");
