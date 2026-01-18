@@ -7,7 +7,7 @@
 #include "filters.h"
 #include "walk.h"
 
-void walk(const char *path, const struct FilterOptions *filters) {
+static void walk_internal(const char *path, const struct FilterOptions *filters, int depth) {
     DIR *dir = opendir(path);
     if (dir == NULL) {
         perror(path);
@@ -41,9 +41,15 @@ void walk(const char *path, const struct FilterOptions *filters) {
 
         // Wenn Verzeichnis → rekursiv weiterlaufen
         if (S_ISDIR(st.st_mode)) {
-            walk(fullpath, filters);
+            if (filters == NULL || filters->max_depth < 0 || depth < filters->max_depth) {
+                walk_internal(fullpath, filters, depth + 1);
+            }
         }
     }
 
     closedir(dir);
+}
+
+void walk(const char *path, const struct FilterOptions *filters) {
+    walk_internal(path, filters, 0);
 }

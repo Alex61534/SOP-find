@@ -12,6 +12,7 @@ struct FilterOptions {
 
     off_t size_min;             //off_t unterstützt große dateien und ist stat() kompatibel
     off_t size_max;
+    int max_depth;              // -1 = unbegrenzt
 };
 
 bool filter_match_name(const char *entry_name,
