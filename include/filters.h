@@ -18,6 +18,9 @@ struct FilterOptions {
 bool filter_match_name(const char *entry_name,
                     const struct FilterOptions *filters,
                     const struct stat *st);
+int filter_match_all(const struct FilterOptions *filters,
+                    const char *entry_name,
+                    const struct stat *st);
 bool match_suffix(const char *entry_name, const char *suffix);
 
 #endif
