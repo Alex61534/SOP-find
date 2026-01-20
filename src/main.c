@@ -19,6 +19,7 @@ static void print_usage(const char *prog) {
         "      --size-min KB      minimum size in KB\n"
         "      --size-max KB      maximum size in KB\n"
         "      --maxdepth N       maximum recursion depth (0 = only start dir)\n"
+        "  -D, --delete           prompt before deleting matches (files only)\n"
         "  -h, --help             show this help and exit\n",
         prog);
 }
@@ -79,12 +80,12 @@ char *checkEnding(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
-    struct FilterOptions filters = {0};
+    struct Options opts = {0};
     // Default: no max size limit unless specified.
-    filters.size_max = LLONG_MAX; // size max muss mit einer hohen zahl
+    opts.filters.size_max = LLONG_MAX; // size max muss mit einer hohen zahl
                         //initialisiert werden, sonst wird sie auf 0 gesetzt und dann failed das programm
     // Default: no depth limit.
-    filters.max_depth = -1;
+    opts.filters.max_depth = -1;
 
     int option_index = 0;
     int c;
@@ -97,35 +98,39 @@ int main(int argc, char *argv[]) {
         {"size-min", required_argument, 0, 1000},
         {"size-max", required_argument, 0, 1001},
         {"maxdepth", required_argument, 0, 1002},
+        {"delete", no_argument, 0, 'D'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
 
-    while ((c = getopt_long(argc, argv, "n:s:t:h", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "n:s:t:Dh", long_options, &option_index)) != -1) {
         switch (c) {
             case 'n':
-                filters.name = optarg;
+                opts.filters.name = optarg;
                 break;
             case 's':
-                filters.suffix = optarg;
+                opts.filters.suffix = optarg;
                 break;
             case 't':
-                filters.type = optarg[0];
+                opts.filters.type = optarg[0];
+                break;
+            case 'D':
+                opts.actions.delete_mode = true;
                 break;
             case 1000:
-                if (parse_kb(optarg, &filters.size_min) != 0) {
+                if (parse_kb(optarg, &opts.filters.size_min) != 0) {
                     fprintf(stderr, "Ungültiger Wert für size-min Option\n");
                     return 1;
                 }
                 break;
             case 1001:
-                if (parse_kb(optarg, &filters.size_max) != 0) {
+                if (parse_kb(optarg, &opts.filters.size_max) != 0) {
                     fprintf(stderr, "Ungültiger Wert für size-max Option\n");
                     return 1;
                 }
                 break;
             case 1002:
-                if (parse_depth(optarg, &filters.max_depth) != 0) {
+                if (parse_depth(optarg, &opts.filters.max_depth) != 0) {
                     fprintf(stderr, "Ungültiger Wert für maxdepth Option\n");
                     return 1;
                 }
@@ -139,7 +144,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (filters.size_min > filters.size_max) {
+    if (opts.filters.size_min > opts.filters.size_max) {
         fprintf(stderr, "size-min must be <= size-max\n");
         return 1;
     }
@@ -149,12 +154,17 @@ int main(int argc, char *argv[]) {
         path = argv[optind];
     }
 
+    if (opts.actions.delete_mode && !isatty(STDIN_FILENO)) {
+        fprintf(stderr, "--delete requires an interactive terminal for confirmation\n");
+        return 1;
+    }
+
     if (path) {
         char *normalized = checkEnding(path);
         if (!normalized) {
             return 1;
         }
-        walk(normalized, &filters);
+        walk(normalized, &opts);
         free(normalized);
         return 0;
     }
@@ -179,7 +189,7 @@ int main(int argc, char *argv[]) {
             free(line);
             return 1;
         }
-        walk(normalized, &filters);
+        walk(normalized, &opts);
         free(normalized);
     }
     if (ferror(stdin)) {

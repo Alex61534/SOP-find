@@ -15,6 +15,15 @@ struct FilterOptions {
     int max_depth;              // -1 = unbegrenzt
 };
 
+struct ActionOptions {
+    bool delete_mode;           // prompt and delete matches
+};
+
+struct Options {
+    struct FilterOptions filters;
+    struct ActionOptions actions;
+};
+
 bool filter_match_name(const char *entry_name,
                     const struct FilterOptions *filters,
                     const struct stat *st);

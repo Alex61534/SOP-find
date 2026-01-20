@@ -3,8 +3,7 @@
 
 #include "filters.h"
 
-void walk(const char *path, const struct FilterOptions *filters);
+void walk(const char *path, const struct Options *options);
 
 #endif
-
 

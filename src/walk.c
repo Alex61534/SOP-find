@@ -5,7 +5,9 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <ctype.h>
 #include <limits.h>
+#include <unistd.h>
 #include "filters.h"
 #include "walk.h"
 
@@ -64,7 +66,25 @@ static Node *queue_pop(Queue *q){
     return n;
 }
 
-void walk (const char *path, const struct FilterOptions *filters){
+static int confirm_delete(const char *path) {
+    char buf[16];
+
+    fprintf(stderr, "Delete %s? [y/N]: ", path);
+    fflush(stderr);
+    if (!fgets(buf, sizeof(buf), stdin)) {
+        return 0;
+    }
+    for (size_t i = 0; buf[i] != '\0'; i++) {
+        if (isspace((unsigned char)buf[i])) {
+            continue;
+        }
+        return (buf[i] == 'y' || buf[i] == 'Y');
+    }
+    return 0;
+}
+
+void walk (const char *path, const struct Options *options){
+    const struct FilterOptions *filters = options ? &options->filters : NULL;
     Queue q;
     queue_init(&q);
     queue_push(&q, path,0);
@@ -87,11 +107,22 @@ void walk (const char *path, const struct FilterOptions *filters){
         name = name ? name + 1 : current;
 
         if (filter_match_all(filters, name, &st)){
-            printf("%s\n", current);
+            if (options && options->actions.delete_mode) {
+                if (S_ISREG(st.st_mode) && confirm_delete(current)) {
+                    if (unlink(current) == 0) {
+                        printf("deleted %s\n", current);
+                    } else {
+                        fprintf(stderr, "delete failed on %s: %s\n",
+                                current, strerror(errno));
+                    }
+                }
+            } else {
+                printf("%s\n", current);
+            }
         }
         /* depth check before descending */
         if(S_ISDIR(st.st_mode)){
-            if (filters->max_depth >= 0 && depth >= filters->max_depth) {
+            if (filters && filters->max_depth >= 0 && depth >= filters->max_depth) {
                 free(current);
                 free(node);
                 continue;
