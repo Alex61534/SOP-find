@@ -21,6 +21,7 @@ static void print_usage(const char *prog) {
         prog);
 }
 
+// Parse size arguments in KB, reject negatives and overflow.
 static int parse_kb(const char *arg, off_t *out) {
     char *end = NULL;
     errno = 0;
@@ -35,6 +36,7 @@ static int parse_kb(const char *arg, off_t *out) {
     return 0;
 }
 
+// Parse recursion depth; 0 means only the start directory.
 static int parse_depth(const char *arg, int *out) {
     char *end = NULL;
     errno = 0;
@@ -68,14 +70,17 @@ char *checkEnding(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
+    // Expect at least a start path; options are optional.
     if (argc < 2) {
         print_usage(argv[0]);
         return 1;
     }
 
     struct FilterOptions filters = {0};
+    // Default: no max size limit unless specified.
     filters.size_max = LLONG_MAX; // size max muss mit einer hohen zahl
                         //initialisiert werden, sonst wird sie auf 0 gesetzt und dann failed das programm
+    // Default: no depth limit.
     filters.max_depth = -1;
 
     const char *path = argv[1];
@@ -88,6 +93,7 @@ int main(int argc, char *argv[]) {
     int option_index = 0;
     int c;
 
+    // Long options for more readable CLI usage.
     static const struct option long_options[] = {
         {"name", required_argument, 0, 'n'},
         {"suffix", required_argument, 0, 's'},
@@ -99,6 +105,7 @@ int main(int argc, char *argv[]) {
         {0, 0, 0, 0}
     };
 
+    // Skip argv[1] (path) and parse options afterwards.
     optind = 2;
     while ((c = getopt_long(argc, argv, "n:s:t:h", long_options, &option_index)) != -1) {
         switch (c) {
@@ -138,6 +145,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Walk the tree and print matches.
     walk(path, &filters);
     return 0;
 }

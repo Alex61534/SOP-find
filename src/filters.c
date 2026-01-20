@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+// Match a file suffix (case-insensitive). If no suffix is set, allow all.
 bool match_suffix(const char *entry_name, const char *suffix){
     if(suffix == NULL){
         return true;
@@ -17,6 +18,7 @@ bool match_suffix(const char *entry_name, const char *suffix){
     return strcasecmp(dot + 1, suffix) == 0;
 }
 
+// Match the file type based on st_mode. Empty type means no filter.
 bool match_type(const struct stat *st, const char type){
     if(type == '\0'){ //da type einzelnes char darf man nicht mit null vergleichen
         return true;
@@ -34,6 +36,7 @@ bool match_type(const struct stat *st, const char type){
     }
 }
 
+// Apply all active filters; any mismatch excludes the entry.
 bool filter_match_name(const char *entry_name,
                     const struct FilterOptions *filters,
                     const struct stat *st) {
