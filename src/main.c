@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <getopt.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include "walk.h"
 #include "filters.h"
 
@@ -29,7 +31,14 @@ static int parse_kb(const char *arg, off_t *out) {
     if (errno != 0 || end == arg || *end != '\0' || kb < 0) {
         return -1;
     }
-    if (kb > LLONG_MAX / 1024) {
+    unsigned int bits = sizeof(off_t) * CHAR_BIT;
+    unsigned long long max_off;
+    if (bits >= 63) {
+        max_off = (unsigned long long)LLONG_MAX;
+    } else {
+        max_off = (1ULL << (bits - 1)) - 1ULL;
+    }
+    if ((unsigned long long)kb > max_off / 1024ULL) {
         return -1;
     }
     *out = (off_t)kb * 1024;
@@ -70,12 +79,6 @@ char *checkEnding(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
-    // Expect at least a start path; options are optional.
-    if (argc < 2) {
-        print_usage(argv[0]);
-        return 1;
-    }
-
     struct FilterOptions filters = {0};
     // Default: no max size limit unless specified.
     filters.size_max = LLONG_MAX; // size max muss mit einer hohen zahl
@@ -83,13 +86,6 @@ int main(int argc, char *argv[]) {
     // Default: no depth limit.
     filters.max_depth = -1;
 
-    const char *path = argv[1];
-
-    char *normalized = checkEnding(path);
-    if (!normalized) {
-        return 1;
-    }
-    path = normalized;
     int option_index = 0;
     int c;
 
@@ -105,8 +101,6 @@ int main(int argc, char *argv[]) {
         {0, 0, 0, 0}
     };
 
-    // Skip argv[1] (path) and parse options afterwards.
-    optind = 2;
     while ((c = getopt_long(argc, argv, "n:s:t:h", long_options, &option_index)) != -1) {
         switch (c) {
             case 'n':
@@ -145,7 +139,54 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Walk the tree and print matches.
-    walk(path, &filters);
+    if (filters.size_min > filters.size_max) {
+        fprintf(stderr, "size-min must be <= size-max\n");
+        return 1;
+    }
+
+    const char *path = NULL;
+    if (optind < argc) {
+        path = argv[optind];
+    }
+
+    if (path) {
+        char *normalized = checkEnding(path);
+        if (!normalized) {
+            return 1;
+        }
+        walk(normalized, &filters);
+        free(normalized);
+        return 0;
+    }
+
+    if (isatty(STDIN_FILENO)) {
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    char *line = NULL;
+    size_t cap = 0;
+    ssize_t len;
+    while ((len = getline(&line, &cap, stdin)) != -1) {
+        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
+            line[--len] = '\0';
+        }
+        if (len == 0) {
+            continue;
+        }
+        char *normalized = checkEnding(line);
+        if (!normalized) {
+            free(line);
+            return 1;
+        }
+        walk(normalized, &filters);
+        free(normalized);
+    }
+    if (ferror(stdin)) {
+        perror("getline");
+        free(line);
+        return 1;
+    }
+    free(line);
     return 0;
 }

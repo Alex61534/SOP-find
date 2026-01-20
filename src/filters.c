@@ -11,7 +11,7 @@ bool match_suffix(const char *entry_name, const char *suffix){
     }
 
     const char *dot = strrchr(entry_name, '.');
-    if(dot == NULL){
+    if(!dot){
         return false;
     }
 
@@ -31,7 +31,9 @@ bool match_type(const struct stat *st, const char type){
     case 'c': return S_ISCHR(st->st_mode);//character device
     case 'b': return S_ISBLK(st->st_mode);//block device
     case 'p': return S_ISFIFO(st->st_mode);//named pipe
+#ifdef S_ISSOCK
     case 's': return S_ISSOCK(st->st_mode);//unix domain socket
+#endif
     default:  return false;
     }
 }
@@ -62,6 +64,14 @@ bool filter_match_name(const char *entry_name,
     if(!match_type(st, filters->type)){
         return false;
     }
-
     return true;
+}
+
+int filter_match_all(const struct FilterOptions *filters,
+                     const char *entry_name,
+                     const struct stat *st)
+{
+    /*all filtering logic is implemented in filter_match_name.
+     This function is an aggregation point for future filters*/
+    return filter_match_name(entry_name, filters, st);
 }
