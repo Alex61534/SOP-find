@@ -49,6 +49,24 @@ static int parse_depth(const char *arg, int *out) {
     return 0;
 }
 
+char *checkEnding(const char *path) {
+    size_t len = strlen(path);
+
+    if (len <= 1 || path[len - 1] != '/') {
+        return strdup(path);
+    }
+
+    char *new_path = malloc(len); // len statt len+1, weil ein Zeichen wegfällt
+    if (!new_path) {
+        return NULL;
+    }
+
+    memcpy(new_path, path, len - 1);
+    new_path[len - 1] = '\0';
+
+    return new_path;
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         print_usage(argv[0]);
@@ -61,6 +79,12 @@ int main(int argc, char *argv[]) {
     filters.max_depth = -1;
 
     const char *path = argv[1];
+
+    char *normalized = checkEnding(path);
+    if (!normalized) {
+        return 1;
+    }
+    path = normalized;
     int option_index = 0;
     int c;
 
