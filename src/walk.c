@@ -9,62 +9,8 @@
 #include <limits.h>
 #include <unistd.h>
 #include "filters.h"
+#include "queue.h"
 #include "walk.h"
-
-typedef struct Node {
-    char *path;
-    int depth;
-    struct Node *next;
-} Node;
-
-typedef struct {
-    Node *head;
-    Node *tail;
-} Queue;
-
-static void queue_init(Queue *q) {
-    q->head=q->tail=NULL;
-}
-
-static int queue_empty(const Queue *q) {
-    return q->head==NULL;
-}
-
-static void queue_push(Queue *q, const char *path, int depth) {
-    Node *n = malloc(sizeof(Node));
-    if (!n) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-
-    n->path = strdup(path);
-    if (!n->path) {
-        perror("strdup");
-        free(n);
-        exit(EXIT_FAILURE);
-    }
-    n->depth= depth;
-    n->next=NULL;
-
-    if(q->tail){
-        q->tail->next=n;
-    }else{
-        q->head=n;
-    }
-    q->tail=n;	
-}
-
-static Node *queue_pop(Queue *q){
-    if (queue_empty(q)){
-        return NULL;
-    }
-    Node *n = q->head;
-    q->head=n->next;
-    if(!q->head){
-        q->tail=NULL;
-    }
-    return n;
-}
 
 static int confirm_delete(const char *path) {
     char buf[16];
@@ -90,7 +36,7 @@ void walk (const char *path, const struct Options *options){
     queue_push(&q, path,0);
 
     while(!queue_empty(&q)){
-        Node *node = queue_pop(&q);
+        struct QueueItem *node = queue_pop(&q);
         char *current = node->path;
         int depth = node->depth;
 
