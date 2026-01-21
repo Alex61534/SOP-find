@@ -6,3 +6,7 @@ myfind: src/main.c src/walk.c src/filters.c src/queue.c src/cli.c src/io.c
 
 clean:
 	rm -f myfind
+
+.PHONY: test
+test: myfind
+	./tests/run.sh
