@@ -9,6 +9,8 @@ struct FilterOptions {
     const char *name;
     const char *suffix;
     char type;
+    const char *name_contains;
+    const char *exclude;
 
     off_t size_min;             //off_t unterstützt große dateien und ist stat() kompatibel
     off_t size_max;

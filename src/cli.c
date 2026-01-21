@@ -10,14 +10,16 @@ void cli_print_usage(const char *prog) {
     fprintf(stderr,
         "Usage: %s <path> [options]\n"
         "Options:\n"
-        "  -n, --name NAME        exact filename match\n"
-        "  -s, --suffix SUFFIX    file suffix (case-insensitive, without dot)\n"
-        "  -t, --type TYPE        file type (e.g. f, d, l)\n"
-        "      --size-min KB      minimum size in KB\n"
-        "      --size-max KB      maximum size in KB\n"
-        "      --maxdepth N       maximum recursion depth (0 = only start dir)\n"
-        "  -D, --delete           prompt before deleting matches (files only)\n"
-        "  -h, --help             show this help and exit\n",
+        "  -n, --name NAME          exact filename match\n"
+        "  -s, --suffix SUFFIX      file suffix (case-insensitive, without dot)\n"
+        "  -t, --type TYPE          file type (e.g. f, d, l)\n"
+        "  -c, --name-contains NAME filename contains name\n"
+        "  -e, --exclude NAME       filename can not contain name\n"
+        "      --size-min KB        minimum size in KB\n"
+        "      --size-max KB        maximum size in KB\n"
+        "      --maxdepth N         maximum recursion depth (0 = only start dir)\n"
+        "  -D, --delete             prompt before deleting matches (files only)\n"
+        "  -h, --help               show this help and exit\n",
         prog);
 }
 
@@ -64,6 +66,8 @@ int parse_cli(int argc, char **argv, struct Options *opts, const char **path) {
 
     static const struct option long_options[] = {
         {"name", required_argument, 0, 'n'},
+        {"name-contains", required_argument, 0, 'c'},
+        {"exclude", required_argument, 0, 'e'},
         {"suffix", required_argument, 0, 's'},
         {"type", required_argument, 0, 't'},
         {"size-min", required_argument, 0, 1000},
@@ -84,6 +88,12 @@ int parse_cli(int argc, char **argv, struct Options *opts, const char **path) {
                 break;
             case 't':
                 opts->filters.type = optarg[0];
+                break;
+            case 'c':
+                opts->filters.name_contains = optarg;
+                break;
+            case 'e':
+                opts->filters.exclude = optarg;
                 break;
             case 'D':
                 opts->actions.delete_mode = true;

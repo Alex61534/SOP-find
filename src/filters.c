@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <string.h>
 #include <strings.h>
 #include "filters.h"
@@ -48,6 +49,14 @@ bool filter_match_name(const char *entry_name,
 
     if(filters->name != NULL && strcmp(entry_name, filters->name) != 0){
         return false;
+    }
+
+    if (filters->name_contains != NULL && strcasestr(entry_name, filters->name_contains) == NULL) {
+    return false;
+    }
+
+    if (filters->exclude != NULL && strcasestr(entry_name, filters->exclude) != NULL) {
+    return false;
     }
 
     if (!match_suffix(entry_name, filters->suffix)){
