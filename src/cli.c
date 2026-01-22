@@ -78,7 +78,7 @@ int parse_cli(int argc, char **argv, struct Options *opts, const char **path) {
         {0, 0, 0, 0}
     };
 
-    while ((c = getopt_long(argc, argv, "n:s:t:Dh", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "n:s:t:c:e:Dh", long_options, &option_index)) != -1) {
         switch (c) {
             case 'n':
                 opts->filters.name = optarg;
